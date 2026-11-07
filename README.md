@@ -1,3 +1,4 @@
+
 # Sistem Pengelolaan Putusan Pengadilan Narkotika
 
 ## Deskripsi Proyek
@@ -17,37 +18,41 @@ Proyek ini dibuat sebagai tugas Ujian Tengah Semester (UTS) mata kuliah Algoritm
 
 Komponen yang terdapat dalam proyek:
 
-1. **StrukturDataUtama** — mengelola kumpulan data putusan menggunakan struktur Linked List.
-2. **QueueUtama** — mengelola antrean data putusan dengan prinsip FIFO (First In, First Out).
-3. **Putusan** — model yang menyimpan atribut data putusan.
-4. **CSVImporter** — membaca dan mengimpor data putusan dari file CSV.
-5. **Audit** — mencatat riwayat aktivitas pengelolaan data.
-6. **PutusanManager** — menyediakan menu untuk menambah, menampilkan, dan menghitung data putusan.
+1. **StrukturDataUtama** - Mengelola kumpulan data putusan menggunakan struktur Linked List.
+2. **QueueUtama** - Mengelola antrean data putusan dengan prinsip FIFO (First In, First Out).
+3. **Putusan** - Model yang menyimpan atribut data putusan.
+4. **CSVImporter** - Membaca dan mengimpor data putusan dari file CSV serta melakukan validasi data.
+5. **Audit** - Menyediakan pencatatan dan penampilan riwayat aktivitas.
+6. **PutusanManager** - Menyediakan menu utama untuk menambah, menampilkan, dan menghitung data putusan.
 
 ## Struktur Folder
 
 ```text
-src/
-└── main/
-    └── java/
-        ├── audit/
-        ├── model/
-        └── strukturdata/
-
-data/
-└── putusan-50.csv
-
-docs/
-└── data-provenance.csv
-
-AI_USAGE.md
-CONTRIBUTIONS.md
-README.md
+uts-struktur-data-narkotika-kelompok16/
+|
++-- src/
+|   +-- main/
+|       +-- java/
+|           +-- audit/
+|           +-- model/
+|           +-- strukturdata/
+|
++-- data/
+|   +-- putusan-50.csv
+|
++-- docs/
+|   +-- data-provenance.csv
+|   +-- TESTING_REPORT.md
+|
++-- AI_USAGE.md
++-- CONTRIBUTIONS.md
++-- README.md
++-- pom.xml
 ```
 
 ## Cara Menjalankan Program
 
-### 1. Kompilasi seluruh file Java
+### 1. Kompilasi Seluruh File Java
 
 Jalankan perintah berikut melalui PowerShell dari folder utama proyek:
 
@@ -55,13 +60,13 @@ Jalankan perintah berikut melalui PowerShell dari folder utama proyek:
 & "C:\Program Files\Eclipse Adoptium\jdk-17.0.21.9-hotspot\bin\javac.exe" -d out (Get-ChildItem src/main/java -Recurse -Filter *.java | ForEach-Object { $_.FullName })
 ```
 
-### 2. Menjalankan aplikasi
+### 2. Menjalankan Aplikasi
 
 ```powershell
 & "C:\Program Files\Eclipse Adoptium\jdk-17.0.21.9-hotspot\bin\java.exe" -cp out strukturdata.PutusanManager
 ```
 
-### 3. Menjalankan pengujian
+### 3. Menjalankan Pengujian
 
 Contoh menjalankan pengujian integrasi:
 
@@ -69,4 +74,29 @@ Contoh menjalankan pengujian integrasi:
 & "C:\Program Files\Eclipse Adoptium\jdk-17.0.21.9-hotspot\bin\java.exe" -cp out strukturdata.IntegrasiTest
 ```
 
-Pengujian lainnya tersedia pada package `audit` dan `
+Contoh menjalankan pengujian impor CSV:
+
+```powershell
+& "C:\Program Files\Eclipse Adoptium\jdk-17.0.21.9-hotspot\bin\java.exe" -cp out strukturdata.CSVImportTest
+```
+
+Contoh menjalankan pengujian validasi CSV:
+
+```powershell
+& "C:\Program Files\Eclipse Adoptium\jdk-17.0.21.9-hotspot\bin\java.exe" -cp out strukturdata.CSVValidationTest
+```
+
+Pengujian lainnya tersedia pada package `strukturdata` dan `audit`.
+
+## Dokumentasi Pengujian
+
+Laporan hasil pengujian aplikasi dapat dilihat pada:
+
+`docs/TESTING_REPORT.md`
+
+Laporan tersebut berisi tujuan pengujian, daftar pengujian, hasil validasi CSV, hasil impor dataset, dan kesimpulan pengujian.
+
+## Kontributor
+
+- Faizul Rahmat
+- Abdul Aziz Saputra
