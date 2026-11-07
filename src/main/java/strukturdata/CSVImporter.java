@@ -21,6 +21,7 @@ public class CSVImporter {
                     "keadaanMemberatkan,keadaanMeringankan,sourcePages";
 
     public static class ImportResult {
+
         private int berhasil;
         private int gagal;
         private final StringBuilder detailError = new StringBuilder();
@@ -86,22 +87,25 @@ public class CSVImporter {
                         );
                     }
 
-                    // Memeriksa kolom wajib
                     wajibDiisi(kolom[0], "caseId");
                     wajibDiisi(kolom[1], "nomorPerkara");
                     wajibDiisi(kolom[2], "pengadilan");
                     wajibDiisi(kolom[4], "terdakwaKode");
+                    wajibDiisi(kolom[5], "jenisNarkotika");
 
-                    // Mengolah tanggal, boleh kosong
                     LocalDate tanggal = parseTanggal(kolom[3]);
 
-                    // Mengolah angka, nilai kosong menjadi 0
                     double berat = parseDouble(kolom[6]);
                     int tuntutan = parseInt(kolom[9]);
                     int vonis = parseInt(kolom[10]);
                     long denda = parseLong(kolom[11]);
 
-                    // Membuat objek Putusan
+                    // Menolak nilai angka negatif
+                    validasiTidakNegatif(berat, "berat barang bukti");
+                    validasiTidakNegatif(tuntutan, "tuntutan");
+                    validasiTidakNegatif(vonis, "vonis");
+                    validasiTidakNegatif(denda, "denda");
+
                     Putusan putusan = new Putusan(
                             kolom[0],
                             kolom[1],
@@ -121,7 +125,6 @@ public class CSVImporter {
                             kolom[15]
                     );
 
-                    // Menambahkan data ke linked list
                     dataPutusan.add(putusan);
                     hasil.tambahBerhasil();
 
@@ -138,6 +141,36 @@ public class CSVImporter {
         if (nilai == null || nilai.trim().isEmpty()) {
             throw new IllegalArgumentException(
                     "Kolom " + namaKolom + " wajib diisi."
+            );
+        }
+    }
+
+    private static void validasiTidakNegatif(
+            double nilai, String namaKolom) {
+
+        if (nilai < 0) {
+            throw new IllegalArgumentException(
+                    "Nilai " + namaKolom + " tidak boleh negatif."
+            );
+        }
+    }
+
+    private static void validasiTidakNegatif(
+            int nilai, String namaKolom) {
+
+        if (nilai < 0) {
+            throw new IllegalArgumentException(
+                    "Nilai " + namaKolom + " tidak boleh negatif."
+            );
+        }
+    }
+
+    private static void validasiTidakNegatif(
+            long nilai, String namaKolom) {
+
+        if (nilai < 0) {
+            throw new IllegalArgumentException(
+                    "Nilai " + namaKolom + " tidak boleh negatif."
             );
         }
     }
@@ -169,9 +202,16 @@ public class CSVImporter {
         }
 
         try {
-            return Double.parseDouble(
+            double hasil = Double.parseDouble(
                     nilai.trim().replace(',', '.')
             );
+
+            if (!Double.isFinite(hasil)) {
+                throw new NumberFormatException();
+            }
+
+            return hasil;
+
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(
                     "Angka berat tidak valid: " + nilai

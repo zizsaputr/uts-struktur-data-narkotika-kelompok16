@@ -75,6 +75,21 @@ public class QueueUtama<T> {
         return front.data;
     }
 
+    // Mencari data tanpa mengubah urutan antrean
+    public boolean contains(T data) {
+        Node<T> current = front;
+
+        while (current != null) {
+            if (java.util.Objects.equals(current.data, data)) {
+                return true;
+            }
+
+            current = current.next;
+        }
+
+        return false;
+    }
+
     // Mengembalikan jumlah elemen
     public int size() {
         return size;
