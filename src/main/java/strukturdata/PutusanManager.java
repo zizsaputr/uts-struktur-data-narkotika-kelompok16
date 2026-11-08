@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PutusanManager {
 
@@ -171,6 +173,97 @@ public class PutusanManager {
         simpanDataKeCSV();
     }
 
+
+    // Menu ekspor hasil pencarian dan laporan
+    private void menuEkspor() {
+        System.out.println("\n===== EKSPOR DATA DAN LAPORAN =====");
+        System.out.println("1. Ekspor hasil pencarian");
+        System.out.println("2. Ekspor laporan seluruh putusan");
+        System.out.print("Pilih jenis ekspor: ");
+
+        int pilihan = bacaAngka();
+
+        List<Putusan> daftar = new ArrayList<>();
+        String judul;
+
+        if (pilihan == 1) {
+            System.out.print("Masukkan Case ID: ");
+            String caseId = input.nextLine().trim();
+
+            int indeks = cariIndeks(caseId);
+
+            if (indeks == -1) {
+                System.out.println("Data putusan tidak ditemukan.");
+                return;
+            }
+
+            daftar.add(dataPutusan.get(indeks));
+            judul = "HASIL PENCARIAN PUTUSAN";
+
+        } else if (pilihan == 2) {
+            for (int i = 0; i < dataPutusan.size(); i++) {
+                daftar.add(dataPutusan.get(i));
+            }
+
+            judul = "LAPORAN SELURUH PUTUSAN";
+
+        } else {
+            System.out.println("Pilihan tidak tersedia.");
+            return;
+        }
+
+        System.out.println("\nFormat ekspor:");
+        System.out.println("1. CSV");
+        System.out.println("2. TXT");
+        System.out.print("Pilih format: ");
+
+        int format = bacaAngka();
+
+        if (format != 1 && format != 2) {
+            System.out.println("Format tidak tersedia.");
+            return;
+        }
+
+        System.out.print("Masukkan lokasi dan nama file: ");
+        String lokasi = input.nextLine().trim();
+
+        if (lokasi.isEmpty()) {
+            System.out.println("Lokasi file tidak boleh kosong.");
+            return;
+        }
+
+        String ekstensi = format == 1 ? ".csv" : ".txt";
+
+        if (!lokasi.toLowerCase().endsWith(ekstensi)) {
+            lokasi += ekstensi;
+        }
+
+        try {
+            CSVExporter exporter = new CSVExporter();
+
+            if (format == 1) {
+                exporter.exportCSV(lokasi, daftar);
+            } else {
+                exporter.exportTXT(lokasi, daftar, judul);
+            }
+
+            System.out.println("\nEkspor berhasil!");
+            System.out.println("Lokasi file: " + lokasi);
+            System.out.println("Jumlah data: " + daftar.size());
+
+            audit.catatAktivitas(
+                    "EKSPOR",
+                    judul + " ke " + lokasi +
+                    ". Jumlah data: " + daftar.size()
+            );
+
+        } catch (IOException e) {
+            System.out.println("Gagal menyimpan file: " + e.getMessage());
+        } catch (SecurityException e) {
+            System.out.println("Tidak memiliki izin menyimpan file: " +
+                    e.getMessage());
+        }
+    }
     // Filter putusan berdasarkan beberapa kriteria
     private void filterPutusan() {
         System.out.println("\n===== FILTER DATA PUTUSAN =====");
@@ -523,6 +616,7 @@ public class PutusanManager {
             System.out.println("7. Proses antrean Queue");
             System.out.println("8. Riwayat aktivitas Audit");
             System.out.println("9. Keluar");
+            System.out.println("10. Ekspor data dan laporan");
             System.out.println("======================================");
             System.out.print("Pilih menu: ");
 
