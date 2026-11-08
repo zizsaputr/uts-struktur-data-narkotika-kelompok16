@@ -10,6 +10,8 @@ import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class PutusanManager {
 
@@ -119,31 +121,69 @@ public class PutusanManager {
         return -1;
     }
 
-    // Fitur pencarian
+    // Fitur pencarian berdasarkan beberapa kategori
     private void cariPutusan() {
         System.out.println("\n===== PENCARIAN PUTUSAN =====");
+        System.out.println("1. Case ID");
+        System.out.println("2. Nomor perkara");
+        System.out.println("3. Nama pengadilan");
+        System.out.println("4. Kode terdakwa");
+        System.out.println("5. Jenis narkotika");
 
-        System.out.print("Masukkan Case ID: ");
-        String caseId = input.nextLine().trim();
+        System.out.print("Pilih kategori pencarian: ");
+        String pilihan = input.nextLine().trim();
 
-        int indeks = cariIndeks(caseId);
+        System.out.print("Masukkan kata kunci: ");
+        String kataKunci = input.nextLine().trim();
 
-        if (indeks == -1) {
-            System.out.println("Data putusan tidak ditemukan.");
-
-            audit.catatAktivitas(
-                    "CARI",
-                    "Case ID tidak ditemukan: " + caseId
-            );
-        } else {
-            System.out.println("Data putusan ditemukan:");
-            System.out.println(dataPutusan.get(indeks));
-
-            audit.catatAktivitas(
-                    "CARI",
-                    "Mencari putusan " + caseId
-            );
+        if (kataKunci.isEmpty()) {
+            System.out.println("Kata kunci tidak boleh kosong.");
+            return;
         }
+
+        int jumlahDitemukan = 0;
+
+        for (int i = 0; i < dataPutusan.size(); i++) {
+            Putusan p = dataPutusan.get(i);
+            String nilai = "";
+
+            switch (pilihan) {
+                case "1":
+                    nilai = p.getCaseId();
+                    break;
+                case "2":
+                    nilai = p.getNomorPerkara();
+                    break;
+                case "3":
+                    nilai = p.getPengadilan();
+                    break;
+                case "4":
+                    nilai = p.getTerdakwaKode();
+                    break;
+                case "5":
+                    nilai = p.getJenisNarkotika();
+                    break;
+                default:
+                    System.out.println("Pilihan kategori tidak valid.");
+                    return;
+            }
+
+            if (nilai != null &&
+                    nilai.toLowerCase().contains(kataKunci.toLowerCase())) {
+                jumlahDitemukan++;
+                System.out.println("\nHasil ke-" + jumlahDitemukan);
+                System.out.println(p);
+            }
+        }
+
+        System.out.println("\nTotal putusan ditemukan: " + jumlahDitemukan);
+
+        audit.catatAktivitas(
+                "CARI",
+                "Pencarian kategori " + pilihan
+                        + " dengan kata kunci: " + kataKunci
+                        + ". Hasil: " + jumlahDitemukan
+        );
     }
 
     // Fitur penghapusan
@@ -716,6 +756,95 @@ public class PutusanManager {
             daftar.set(kiri + k, sementara.get(k));
         }
     }
+    // Menampilkan hasil agregasi statistik putusan
+    private void tampilkanStatistik() {
+        if (dataPutusan.isEmpty()) {
+            System.out.println("Belum ada data putusan.");
+            return;
+        }
+
+        int jumlah = dataPutusan.size();
+        int totalVonis = 0;
+        int vonisTerendah = Integer.MAX_VALUE;
+        int vonisTertinggi = Integer.MIN_VALUE;
+
+        double totalBerat = 0;
+        long totalDenda = 0;
+
+        Map<String, Integer> jumlahPerJenis = new LinkedHashMap<>();
+
+        for (int i = 0; i < jumlah; i++) {
+            Putusan p = dataPutusan.get(i);
+
+            int vonis = p.getVonisBulan();
+            double berat = p.getBeratBarangBuktiGram();
+            long denda = p.getDendaRupiah();
+
+            totalVonis += vonis;
+            totalBerat += berat;
+            totalDenda += denda;
+
+            if (vonis < vonisTerendah) {
+                vonisTerendah = vonis;
+            }
+
+            if (vonis > vonisTertinggi) {
+                vonisTertinggi = vonis;
+            }
+
+            String jenis = p.getJenisNarkotika();
+
+            if (jenis == null || jenis.trim().isEmpty()) {
+                jenis = "Tidak diketahui";
+            }
+
+            jumlahPerJenis.put(
+                    jenis,
+                    jumlahPerJenis.getOrDefault(jenis, 0) + 1
+            );
+        }
+
+        System.out.println("\n===== STATISTIK DATA PUTUSAN =====");
+
+        System.out.println("Total jumlah putusan : " + jumlah);
+
+        System.out.printf(
+                "Rata-rata vonis      : %.2f bulan%n",
+                (double) totalVonis / jumlah
+        );
+
+        System.out.println("Vonis terendah       : " + vonisTerendah + " bulan");
+        System.out.println("Vonis tertinggi      : " + vonisTertinggi + " bulan");
+
+        System.out.printf(
+                "Total berat bukti    : %.2f gram%n",
+                totalBerat
+        );
+
+        System.out.printf(
+                "Rata-rata berat bukti: %.2f gram%n",
+                totalBerat / jumlah
+        );
+
+        System.out.println("Total denda          : Rp " + totalDenda);
+
+        System.out.println("\nJumlah berdasarkan jenis narkotika:");
+
+        for (Map.Entry<String, Integer> entry : jumlahPerJenis.entrySet()) {
+            System.out.println(
+                    "- " + entry.getKey() + ": " + entry.getValue() + " putusan"
+            );
+        }
+
+        boolean invariantValid = dataPutusan.validateInvariant();
+
+        System.out.println("\nInvariant Linked List: " + invariantValid);
+
+        audit.catatAktivitas(
+                "STATISTIK",
+                "Menampilkan agregasi statistik dari " + jumlah + " putusan"
+        );
+    }
     // Menu utama
     private void jalankan() {
         int pilihan;
@@ -735,6 +864,7 @@ public class PutusanManager {
             System.out.println("9. Keluar");
             System.out.println("10. Ekspor data dan laporan");
             System.out.println("11. Pengurutan vonis");
+            System.out.println("12. Agregasi statistik");
             System.out.println("======================================");
             System.out.print("Pilih menu: ");
 
@@ -744,52 +874,40 @@ public class PutusanManager {
                 case 1:
                     inputPutusan();
                     break;
-
                 case 2:
                     tampilkanPutusan();
                     break;
-
                 case 3:
-                    System.out.println(
-                            "Jumlah data putusan: " + jumlahPutusan()
-                    );
-                    System.out.println(
-                            "Invariant valid: " +
-                                    dataPutusan.validateInvariant()
-                    );
+                    System.out.println("Jumlah data putusan: " + jumlahPutusan());
+                    System.out.println("Invariant valid: " + dataPutusan.validateInvariant());
                     break;
-
                 case 4:
                     cariPutusan();
                     break;
-
                 case 5:
                     hapusPutusan();
                     break;
-
                 case 6:
                     filterPutusan();
                     break;
-
                 case 7:
                     prosesAntrean();
                     break;
-
                 case 8:
                     tampilkanAudit();
                     break;
-
                 case 9:
                     simpanDataKeCSV();
                     System.out.println("Terima kasih. Program selesai.");
                     break;
-
                 case 10:
                     menuEkspor();
                     break;
-
                 case 11:
                     urutkanPutusan();
+                    break;
+                case 12:
+                    tampilkanStatistik();
                     break;
                 default:
                     System.out.println("Pilihan tidak tersedia.");
@@ -797,7 +915,6 @@ public class PutusanManager {
 
         } while (pilihan != 9);
     }
-
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
 
@@ -807,3 +924,4 @@ public class PutusanManager {
         input.close();
     }
 }
+
