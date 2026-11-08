@@ -1,24 +1,89 @@
+
 package strukturdata;
 
 import model.Putusan;
+import audit.AuditService;
+
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class PutusanManager {
 
     private StrukturDataUtama<Putusan> dataPutusan;
+    private AuditService audit;
+    private Scanner input;
 
-    public PutusanManager() {
-        dataPutusan = new StrukturDataUtama<>();
+    public PutusanManager(Scanner input) {
+        this.input = input;
+        this.dataPutusan = new StrukturDataUtama<>();
+        this.audit = new AuditService();
+
+        muatDataAwal();
+    }
+
+    // Mengimpor data CSV ketika aplikasi dimulai
+    private void muatDataAwal() {
+        try {
+            CSVImporter importer = new CSVImporter();
+
+            CSVImporter.ImportResult hasil =
+                    importer.importCSV("data/putusan-50.csv", dataPutusan);
+
+            System.out.println("\n===== IMPOR DATA AWAL =====");
+            System.out.println("Data berhasil: " + hasil.getBerhasil());
+            System.out.println("Data gagal   : " + hasil.getGagal());
+            System.out.println("Total data   : " + dataPutusan.size());
+
+            audit.catatAktivitas(
+                    "IMPOR",
+                    "Mengimpor " + hasil.getBerhasil() + " data putusan"
+            );
+
+        } catch (IOException e) {
+            System.out.println("Gagal mengimpor CSV: " + e.getMessage());
+            System.out.println("Aplikasi tetap dapat digunakan.");
+        }
+    }
+
+    // Menyimpan seluruh data Linked List ke file CSV
+    private void simpanDataKeCSV() {
+        try {
+            CSVExporter exporter = new CSVExporter();
+
+            exporter.exportCSV(
+                    "data/putusan-50.csv",
+                    dataPutusan
+            );
+
+            System.out.println("Data berhasil disimpan ke CSV.");
+
+        } catch (IOException e) {
+            System.out.println("Gagal menyimpan data CSV: " + e.getMessage());
+        }
     }
 
     // Menambahkan data putusan
     public void tambahPutusan(Putusan putusan) {
+        if (cariIndeks(putusan.getCaseId()) != -1) {
+            System.out.println("Case ID sudah digunakan.");
+            return;
+        }
+
         dataPutusan.add(putusan);
+
         System.out.println("Data putusan berhasil ditambahkan.");
+
+        audit.catatAktivitas(
+                "TAMBAH",
+                "Menambahkan putusan " + putusan.getCaseId()
+        );
+
+        simpanDataKeCSV();
     }
 
-    // Menampilkan seluruh data putusan
+    // Menampilkan seluruh data
     public void tampilkanPutusan() {
         System.out.println("\n===== DAFTAR DATA PUTUSAN =====");
 
@@ -35,140 +100,413 @@ public class PutusanManager {
         System.out.println("\nTotal data: " + dataPutusan.size());
     }
 
-    // Menampilkan jumlah data
+    // Menghitung jumlah data
     public int jumlahPutusan() {
         return dataPutusan.size();
     }
 
-    // Memeriksa invariant
-    public boolean cekInvariant() {
-        return dataPutusan.validateInvariant();
+    // Mencari indeks berdasarkan Case ID
+    private int cariIndeks(String caseId) {
+        for (int i = 0; i < dataPutusan.size(); i++) {
+            if (dataPutusan.get(i).getCaseId()
+                    .equalsIgnoreCase(caseId)) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
-    public static void main(String[] args) {
+    // Fitur pencarian
+    private void cariPutusan() {
+        System.out.println("\n===== PENCARIAN PUTUSAN =====");
 
-        Scanner input = new Scanner(System.in);
-        PutusanManager manager = new PutusanManager();
+        System.out.print("Masukkan Case ID: ");
+        String caseId = input.nextLine().trim();
 
+        int indeks = cariIndeks(caseId);
+
+        if (indeks == -1) {
+            System.out.println("Data putusan tidak ditemukan.");
+
+            audit.catatAktivitas(
+                    "CARI",
+                    "Case ID tidak ditemukan: " + caseId
+            );
+        } else {
+            System.out.println("Data putusan ditemukan:");
+            System.out.println(dataPutusan.get(indeks));
+
+            audit.catatAktivitas(
+                    "CARI",
+                    "Mencari putusan " + caseId
+            );
+        }
+    }
+
+    // Fitur penghapusan
+    private void hapusPutusan() {
+        System.out.println("\n===== HAPUS DATA PUTUSAN =====");
+
+        System.out.print("Masukkan Case ID: ");
+        String caseId = input.nextLine().trim();
+
+        int indeks = cariIndeks(caseId);
+
+        if (indeks == -1) {
+            System.out.println("Data tidak ditemukan.");
+            return;
+        }
+
+        Putusan dihapus = dataPutusan.remove(indeks);
+
+        System.out.println("Data berhasil dihapus:");
+        System.out.println(dihapus);
+
+        audit.catatAktivitas(
+                "HAPUS",
+                "Menghapus putusan " + caseId
+        );
+
+        simpanDataKeCSV();
+    }
+
+    // Filter berdasarkan pengadilan atau jenis narkotika
+    private void filterPutusan() {
+        System.out.println("\n===== FILTER DATA PUTUSAN =====");
+        System.out.println("1. Berdasarkan pengadilan");
+        System.out.println("2. Berdasarkan jenis narkotika");
+        System.out.print("Pilih filter: ");
+
+        int pilihan = bacaAngka();
+
+        if (pilihan != 1 && pilihan != 2) {
+            System.out.println("Pilihan filter tidak tersedia.");
+            return;
+        }
+
+        System.out.print("Masukkan kata kunci: ");
+        String kataKunci = input.nextLine().trim();
+
+        int jumlah = 0;
+
+        for (int i = 0; i < dataPutusan.size(); i++) {
+            Putusan p = dataPutusan.get(i);
+
+            String nilai;
+
+            if (pilihan == 1) {
+                nilai = p.getPengadilan();
+            } else {
+                nilai = p.getJenisNarkotika();
+            }
+
+            if (nilai != null && nilai.toLowerCase().contains(
+                    kataKunci.toLowerCase())) {
+
+                jumlah++;
+
+                System.out.println("\nData ke-" + jumlah);
+                System.out.println(p);
+            }
+        }
+
+        System.out.println("\nJumlah data sesuai filter: " + jumlah);
+
+        audit.catatAktivitas(
+                "FILTER",
+                "Filter data dengan kata kunci " + kataKunci
+        );
+    }
+
+    // Memproses data menggunakan Queue FIFO
+    private void prosesAntrean() {
+        System.out.println("\n===== PROSES ANTREAN PUTUSAN =====");
+
+        if (dataPutusan.isEmpty()) {
+            System.out.println("Tidak ada data untuk diproses.");
+            return;
+        }
+
+        QueueUtama<Putusan> antrean = new QueueUtama<>();
+
+        for (int i = 0; i < dataPutusan.size(); i++) {
+            antrean.enqueue(dataPutusan.get(i));
+        }
+
+        System.out.println("Jumlah antrean: " + antrean.size());
+
+        while (!antrean.isEmpty()) {
+            Putusan p = antrean.dequeue();
+
+            System.out.println("\nMemproses Case ID: " + p.getCaseId());
+            System.out.println("Nomor perkara: " + p.getNomorPerkara());
+        }
+
+        System.out.println("\nSeluruh antrean berhasil diproses.");
+        System.out.println("Data utama tetap tersimpan.");
+
+        audit.catatAktivitas(
+                "QUEUE",
+                "Memproses antrean " + dataPutusan.size() + " putusan"
+        );
+    }
+
+    // Menampilkan riwayat Audit
+    private void tampilkanAudit() {
+        System.out.println("\n===== RIWAYAT AKTIVITAS =====");
+
+        audit.tampilkanSemuaRiwayat();
+
+        System.out.println(
+                "Total aktivitas: " + audit.getJumlahAktivitas()
+        );
+    }
+
+    // Membaca input angka dengan aman
+    private int bacaAngka() {
+        while (!input.hasNextInt()) {
+            System.out.println("Masukkan harus berupa angka!");
+            input.nextLine();
+            System.out.print("Masukkan pilihan: ");
+        }
+
+        int angka = input.nextInt();
+        input.nextLine();
+
+        return angka;
+    }
+
+    private double bacaBerat() {
+        while (true) {
+            try {
+                System.out.print("Berat barang bukti (gram): ");
+                double nilai = Double.parseDouble(
+                        input.nextLine().trim().replace(',', '.')
+                );
+
+                if (Double.isFinite(nilai) && nilai >= 0) {
+                    return nilai;
+                }
+
+                System.out.println("Berat tidak boleh negatif.");
+
+            } catch (NumberFormatException e) {
+                System.out.println("Masukkan angka yang valid.");
+            }
+        }
+    }
+
+    private int bacaBulan(String keterangan) {
+        while (true) {
+            try {
+                System.out.print(keterangan);
+                int nilai = Integer.parseInt(input.nextLine().trim());
+
+                if (nilai >= 0) {
+                    return nilai;
+                }
+
+                System.out.println("Nilai tidak boleh negatif.");
+
+            } catch (NumberFormatException e) {
+                System.out.println("Masukkan angka yang valid.");
+            }
+        }
+    }
+
+    private long bacaDenda() {
+        while (true) {
+            try {
+                System.out.print("Denda (rupiah): ");
+                long nilai = Long.parseLong(input.nextLine().trim());
+
+                if (nilai >= 0) {
+                    return nilai;
+                }
+
+                System.out.println("Denda tidak boleh negatif.");
+
+            } catch (NumberFormatException e) {
+                System.out.println("Masukkan angka yang valid.");
+            }
+        }
+    }
+
+    private String bacaWajib(String keterangan) {
+        while (true) {
+            System.out.print(keterangan);
+            String nilai = input.nextLine().trim();
+
+            if (!nilai.isEmpty()) {
+                return nilai;
+            }
+
+            System.out.println("Kolom wajib diisi.");
+        }
+    }
+
+    private LocalDate bacaTanggal() {
+        while (true) {
+            System.out.print(
+                    "Tanggal putusan (yyyy-MM-dd, kosong jika tidak ada): "
+            );
+
+            String tanggal = input.nextLine().trim();
+
+            if (tanggal.isEmpty()) {
+                return null;
+            }
+
+            try {
+                return LocalDate.parse(tanggal);
+            } catch (DateTimeParseException e) {
+                System.out.println("Format tanggal tidak valid.");
+            }
+        }
+    }
+
+    // Input data putusan melalui menu
+    private void inputPutusan() {
+        System.out.println("\n===== TAMBAH DATA PUTUSAN =====");
+
+        String caseId = bacaWajib("Case ID: ");
+
+        if (cariIndeks(caseId) != -1) {
+            System.out.println("Case ID sudah digunakan.");
+            return;
+        }
+
+        String nomorPerkara = bacaWajib("Nomor perkara: ");
+        String pengadilan = bacaWajib("Pengadilan: ");
+        LocalDate tanggalPutusan = bacaTanggal();
+        String terdakwaKode = bacaWajib("Kode terdakwa: ");
+        String jenisNarkotika = bacaWajib("Jenis narkotika: ");
+
+        double berat = bacaBerat();
+
+        System.out.print("Pasal dakwaan: ");
+        String pasalDakwaan = input.nextLine();
+
+        System.out.print("Pasal terbukti: ");
+        String pasalTerbukti = input.nextLine();
+
+        int tuntutan = bacaBulan("Tuntutan (bulan): ");
+        int vonis = bacaBulan("Vonis (bulan): ");
+        long denda = bacaDenda();
+
+        System.out.print("Barang bukti: ");
+        String barangBukti = input.nextLine();
+
+        System.out.print("Keadaan memberatkan: ");
+        String memberatkan = input.nextLine();
+
+        System.out.print("Keadaan meringankan: ");
+        String meringankan = input.nextLine();
+
+        System.out.print("Source pages: ");
+        String sourcePages = input.nextLine();
+
+        Putusan putusan = new Putusan(
+                caseId,
+                nomorPerkara,
+                pengadilan,
+                tanggalPutusan,
+                terdakwaKode,
+                jenisNarkotika,
+                berat,
+                pasalDakwaan,
+                pasalTerbukti,
+                tuntutan,
+                vonis,
+                denda,
+                barangBukti,
+                memberatkan,
+                meringankan,
+                sourcePages
+        );
+
+        tambahPutusan(putusan);
+    }
+
+    // Menu utama
+    private void jalankan() {
         int pilihan;
 
         do {
-            System.out.println("\n===== MENU DATA PUTUSAN =====");
+            System.out.println("\n======================================");
+            System.out.println(" SISTEM PENGELOLAAN PUTUSAN NARKOTIKA");
+            System.out.println("======================================");
             System.out.println("1. Tambah data putusan");
-            System.out.println("2. Tampilkan data putusan");
+            System.out.println("2. Tampilkan seluruh data putusan");
             System.out.println("3. Jumlah data putusan");
-            System.out.println("4. Keluar");
+            System.out.println("4. Cari putusan");
+            System.out.println("5. Hapus data putusan");
+            System.out.println("6. Filter data putusan");
+            System.out.println("7. Proses antrean Queue");
+            System.out.println("8. Riwayat aktivitas Audit");
+            System.out.println("9. Keluar");
+            System.out.println("======================================");
             System.out.print("Pilih menu: ");
 
-            while (!input.hasNextInt()) {
-                System.out.println("Pilihan harus berupa angka!");
-                input.nextLine();
-                System.out.print("Pilih menu: ");
-            }
-
-            pilihan = input.nextInt();
-            input.nextLine();
+            pilihan = bacaAngka();
 
             switch (pilihan) {
-
                 case 1:
-                    System.out.println("\n===== TAMBAH DATA PUTUSAN =====");
-
-                    System.out.print("Case ID: ");
-                    String caseId = input.nextLine();
-
-                    System.out.print("Nomor perkara: ");
-                    String nomorPerkara = input.nextLine();
-
-                    System.out.print("Pengadilan: ");
-                    String pengadilan = input.nextLine();
-
-                    System.out.print("Tanggal putusan (yyyy-MM-dd, kosong jika tidak ada): ");
-                    String tanggal = input.nextLine();
-
-                    LocalDate tanggalPutusan = tanggal.isBlank()
-                            ? null : LocalDate.parse(tanggal);
-
-                    System.out.print("Kode terdakwa: ");
-                    String terdakwaKode = input.nextLine();
-
-                    System.out.print("Jenis narkotika: ");
-                    String jenisNarkotika = input.nextLine();
-
-                    System.out.print("Berat barang bukti (gram): ");
-                    double berat = input.nextDouble();
-                    input.nextLine();
-
-                    System.out.print("Pasal dakwaan: ");
-                    String pasalDakwaan = input.nextLine();
-
-                    System.out.print("Pasal terbukti: ");
-                    String pasalTerbukti = input.nextLine();
-
-                    System.out.print("Tuntutan (bulan): ");
-                    int tuntutan = input.nextInt();
-                    input.nextLine();
-
-                    System.out.print("Vonis (bulan): ");
-                    int vonis = input.nextInt();
-                    input.nextLine();
-
-                    System.out.print("Denda (rupiah): ");
-                    long denda = input.nextLong();
-                    input.nextLine();
-
-                    System.out.print("Barang bukti: ");
-                    String barangBukti = input.nextLine();
-
-                    System.out.print("Keadaan memberatkan: ");
-                    String memberatkan = input.nextLine();
-
-                    System.out.print("Keadaan meringankan: ");
-                    String meringankan = input.nextLine();
-
-                    System.out.print("Source pages: ");
-                    String sourcePages = input.nextLine();
-
-                    Putusan putusan = new Putusan(
-                            caseId,
-                            nomorPerkara,
-                            pengadilan,
-                            tanggalPutusan,
-                            terdakwaKode,
-                            jenisNarkotika,
-                            berat,
-                            pasalDakwaan,
-                            pasalTerbukti,
-                            tuntutan,
-                            vonis,
-                            denda,
-                            barangBukti,
-                            memberatkan,
-                            meringankan,
-                            sourcePages
-                    );
-
-                    manager.tambahPutusan(putusan);
+                    inputPutusan();
                     break;
 
                 case 2:
-                    manager.tampilkanPutusan();
+                    tampilkanPutusan();
                     break;
 
                 case 3:
-                    System.out.println("Jumlah data putusan: " + manager.jumlahPutusan());
-                    System.out.println("Invariant valid: " + manager.cekInvariant());
+                    System.out.println(
+                            "Jumlah data putusan: " + jumlahPutusan()
+                    );
+                    System.out.println(
+                            "Invariant valid: " +
+                                    dataPutusan.validateInvariant()
+                    );
                     break;
 
                 case 4:
-                    System.out.println("Program selesai.");
+                    cariPutusan();
+                    break;
+
+                case 5:
+                    hapusPutusan();
+                    break;
+
+                case 6:
+                    filterPutusan();
+                    break;
+
+                case 7:
+                    prosesAntrean();
+                    break;
+
+                case 8:
+                    tampilkanAudit();
+                    break;
+
+                case 9:
+                    simpanDataKeCSV();
+                    System.out.println("Terima kasih. Program selesai.");
                     break;
 
                 default:
                     System.out.println("Pilihan tidak tersedia.");
             }
 
-        } while (pilihan != 4);
+        } while (pilihan != 9);
+    }
+
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+
+        PutusanManager manager = new PutusanManager(input);
+        manager.jalankan();
 
         input.close();
     }
