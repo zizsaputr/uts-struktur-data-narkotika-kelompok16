@@ -171,54 +171,131 @@ public class PutusanManager {
         simpanDataKeCSV();
     }
 
-    // Filter berdasarkan pengadilan atau jenis narkotika
+    // Filter putusan berdasarkan beberapa kriteria
     private void filterPutusan() {
         System.out.println("\n===== FILTER DATA PUTUSAN =====");
-        System.out.println("1. Berdasarkan pengadilan");
-        System.out.println("2. Berdasarkan jenis narkotika");
-        System.out.print("Pilih filter: ");
+        System.out.println("Kosongkan input jika kriteria tidak digunakan.");
 
-        int pilihan = bacaAngka();
+        System.out.print("Jenis narkotika: ");
+        String jenis = input.nextLine().trim();
 
-        if (pilihan != 1 && pilihan != 2) {
-            System.out.println("Pilihan filter tidak tersedia.");
+        System.out.print("Berat minimum (gram): ");
+        String beratMinInput = input.nextLine().trim();
+
+        System.out.print("Berat maksimum (gram): ");
+        String beratMaxInput = input.nextLine().trim();
+
+        System.out.print("Pasal terbukti: ");
+        String pasal = input.nextLine().trim();
+
+        System.out.print("Vonis minimum (bulan): ");
+        String vonisMinInput = input.nextLine().trim();
+
+        System.out.print("Vonis maksimum (bulan): ");
+        String vonisMaxInput = input.nextLine().trim();
+
+        double beratMin = 0;
+        double beratMax = Double.MAX_VALUE;
+        int vonisMin = 0;
+        int vonisMax = Integer.MAX_VALUE;
+
+        try {
+            if (!beratMinInput.isEmpty()) {
+                beratMin = Double.parseDouble(
+                        beratMinInput.replace(',', '.')
+                );
+            }
+
+            if (!beratMaxInput.isEmpty()) {
+                beratMax = Double.parseDouble(
+                        beratMaxInput.replace(',', '.')
+                );
+            }
+
+            if (!vonisMinInput.isEmpty()) {
+                vonisMin = Integer.parseInt(vonisMinInput);
+            }
+
+            if (!vonisMaxInput.isEmpty()) {
+                vonisMax = Integer.parseInt(vonisMaxInput);
+            }
+
+            if (!Double.isFinite(beratMin) ||
+                    !Double.isFinite(beratMax)) {
+                System.out.println("Berat harus berupa angka yang valid.");
+                return;
+            }
+
+            if (beratMin < 0 || beratMax < 0 ||
+                    vonisMin < 0 || vonisMax < 0) {
+                System.out.println("Nilai filter tidak boleh negatif.");
+                return;
+            }
+
+            if (beratMin > beratMax || vonisMin > vonisMax) {
+                System.out.println("Rentang minimum tidak boleh melebihi maksimum.");
+                return;
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("Input angka tidak valid.");
             return;
         }
 
-        System.out.print("Masukkan kata kunci: ");
-        String kataKunci = input.nextLine().trim();
-
         int jumlah = 0;
+
+        System.out.println("\n===== HASIL FILTER PUTUSAN =====");
 
         for (int i = 0; i < dataPutusan.size(); i++) {
             Putusan p = dataPutusan.get(i);
+            boolean cocok = true;
 
-            String nilai;
-
-            if (pilihan == 1) {
-                nilai = p.getPengadilan();
-            } else {
-                nilai = p.getJenisNarkotika();
+            if (!jenis.isEmpty()) {
+                cocok = p.getJenisNarkotika() != null &&
+                        p.getJenisNarkotika().toLowerCase()
+                                .contains(jenis.toLowerCase());
             }
 
-            if (nilai != null && nilai.toLowerCase().contains(
-                    kataKunci.toLowerCase())) {
+            if (cocok && !beratMinInput.isEmpty()) {
+                cocok = p.getBeratBarangBuktiGram() >= beratMin;
+            }
 
+            if (cocok && !beratMaxInput.isEmpty()) {
+                cocok = p.getBeratBarangBuktiGram() <= beratMax;
+            }
+
+            if (cocok && !pasal.isEmpty()) {
+                cocok = p.getPasalTerbukti() != null &&
+                        p.getPasalTerbukti().toLowerCase()
+                                .contains(pasal.toLowerCase());
+            }
+
+            if (cocok && !vonisMinInput.isEmpty()) {
+                cocok = p.getVonisBulan() >= vonisMin;
+            }
+
+            if (cocok && !vonisMaxInput.isEmpty()) {
+                cocok = p.getVonisBulan() <= vonisMax;
+            }
+
+            if (cocok) {
                 jumlah++;
-
                 System.out.println("\nData ke-" + jumlah);
                 System.out.println(p);
             }
         }
 
         System.out.println("\nJumlah data sesuai filter: " + jumlah);
+        System.out.println(
+                "Invariant struktur utama: " +
+                dataPutusan.validateInvariant()
+        );
 
         audit.catatAktivitas(
                 "FILTER",
-                "Filter data dengan kata kunci " + kataKunci
+                "Melakukan filter gabungan. Jumlah hasil: " + jumlah
         );
     }
-
     // Memproses data menggunakan Queue FIFO
     private void prosesAntrean() {
         System.out.println("\n===== PROSES ANTREAN PUTUSAN =====");
