@@ -10,6 +10,8 @@ import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class PutusanManager {
 
@@ -599,6 +601,95 @@ public class PutusanManager {
         tambahPutusan(putusan);
     }
 
+    // Menampilkan hasil agregasi statistik putusan
+    private void tampilkanStatistik() {
+        if (dataPutusan.isEmpty()) {
+            System.out.println("Belum ada data putusan.");
+            return;
+        }
+
+        int jumlah = dataPutusan.size();
+        int totalVonis = 0;
+        int vonisTerendah = Integer.MAX_VALUE;
+        int vonisTertinggi = Integer.MIN_VALUE;
+
+        double totalBerat = 0;
+        long totalDenda = 0;
+
+        Map<String, Integer> jumlahPerJenis = new LinkedHashMap<>();
+
+        for (int i = 0; i < jumlah; i++) {
+            Putusan p = dataPutusan.get(i);
+
+            int vonis = p.getVonisBulan();
+            double berat = p.getBeratBarangBuktiGram();
+            long denda = p.getDendaRupiah();
+
+            totalVonis += vonis;
+            totalBerat += berat;
+            totalDenda += denda;
+
+            if (vonis < vonisTerendah) {
+                vonisTerendah = vonis;
+            }
+
+            if (vonis > vonisTertinggi) {
+                vonisTertinggi = vonis;
+            }
+
+            String jenis = p.getJenisNarkotika();
+
+            if (jenis == null || jenis.trim().isEmpty()) {
+                jenis = "Tidak diketahui";
+            }
+
+            jumlahPerJenis.put(
+                    jenis,
+                    jumlahPerJenis.getOrDefault(jenis, 0) + 1
+            );
+        }
+
+        System.out.println("\n===== STATISTIK DATA PUTUSAN =====");
+
+        System.out.println("Total jumlah putusan : " + jumlah);
+
+        System.out.printf(
+                "Rata-rata vonis      : %.2f bulan%n",
+                (double) totalVonis / jumlah
+        );
+
+        System.out.println("Vonis terendah       : " + vonisTerendah + " bulan");
+        System.out.println("Vonis tertinggi      : " + vonisTertinggi + " bulan");
+
+        System.out.printf(
+                "Total berat bukti    : %.2f gram%n",
+                totalBerat
+        );
+
+        System.out.printf(
+                "Rata-rata berat bukti: %.2f gram%n",
+                totalBerat / jumlah
+        );
+
+        System.out.println("Total denda          : Rp " + totalDenda);
+
+        System.out.println("\nJumlah berdasarkan jenis narkotika:");
+
+        for (Map.Entry<String, Integer> entry : jumlahPerJenis.entrySet()) {
+            System.out.println(
+                    "- " + entry.getKey() + ": " + entry.getValue() + " putusan"
+            );
+        }
+
+        boolean invariantValid = dataPutusan.validateInvariant();
+
+        System.out.println("\nInvariant Linked List: " + invariantValid);
+
+        audit.catatAktivitas(
+                "STATISTIK",
+                "Menampilkan agregasi statistik dari " + jumlah + " putusan"
+        );
+    }
     // Menu utama
     private void jalankan() {
         int pilihan;
@@ -617,6 +708,7 @@ public class PutusanManager {
             System.out.println("8. Riwayat aktivitas Audit");
             System.out.println("9. Keluar");
             System.out.println("10. Ekspor data dan laporan");
+            System.out.println("11. Agregasi statistik");
             System.out.println("======================================");
             System.out.print("Pilih menu: ");
 
@@ -666,6 +758,9 @@ public class PutusanManager {
                     System.out.println("Terima kasih. Program selesai.");
                     break;
 
+                case 11:
+                    tampilkanStatistik();
+                    break;
                 default:
                     System.out.println("Pilihan tidak tersedia.");
             }
