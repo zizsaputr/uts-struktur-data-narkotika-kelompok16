@@ -121,31 +121,69 @@ public class PutusanManager {
         return -1;
     }
 
-    // Fitur pencarian
+    // Fitur pencarian berdasarkan beberapa kategori
     private void cariPutusan() {
         System.out.println("\n===== PENCARIAN PUTUSAN =====");
+        System.out.println("1. Case ID");
+        System.out.println("2. Nomor perkara");
+        System.out.println("3. Nama pengadilan");
+        System.out.println("4. Kode terdakwa");
+        System.out.println("5. Jenis narkotika");
 
-        System.out.print("Masukkan Case ID: ");
-        String caseId = input.nextLine().trim();
+        System.out.print("Pilih kategori pencarian: ");
+        String pilihan = input.nextLine().trim();
 
-        int indeks = cariIndeks(caseId);
+        System.out.print("Masukkan kata kunci: ");
+        String kataKunci = input.nextLine().trim();
 
-        if (indeks == -1) {
-            System.out.println("Data putusan tidak ditemukan.");
-
-            audit.catatAktivitas(
-                    "CARI",
-                    "Case ID tidak ditemukan: " + caseId
-            );
-        } else {
-            System.out.println("Data putusan ditemukan:");
-            System.out.println(dataPutusan.get(indeks));
-
-            audit.catatAktivitas(
-                    "CARI",
-                    "Mencari putusan " + caseId
-            );
+        if (kataKunci.isEmpty()) {
+            System.out.println("Kata kunci tidak boleh kosong.");
+            return;
         }
+
+        int jumlahDitemukan = 0;
+
+        for (int i = 0; i < dataPutusan.size(); i++) {
+            Putusan p = dataPutusan.get(i);
+            String nilai = "";
+
+            switch (pilihan) {
+                case "1":
+                    nilai = p.getCaseId();
+                    break;
+                case "2":
+                    nilai = p.getNomorPerkara();
+                    break;
+                case "3":
+                    nilai = p.getPengadilan();
+                    break;
+                case "4":
+                    nilai = p.getTerdakwaKode();
+                    break;
+                case "5":
+                    nilai = p.getJenisNarkotika();
+                    break;
+                default:
+                    System.out.println("Pilihan kategori tidak valid.");
+                    return;
+            }
+
+            if (nilai != null &&
+                    nilai.toLowerCase().contains(kataKunci.toLowerCase())) {
+                jumlahDitemukan++;
+                System.out.println("\nHasil ke-" + jumlahDitemukan);
+                System.out.println(p);
+            }
+        }
+
+        System.out.println("\nTotal putusan ditemukan: " + jumlahDitemukan);
+
+        audit.catatAktivitas(
+                "CARI",
+                "Pencarian kategori " + pilihan
+                        + " dengan kata kunci: " + kataKunci
+                        + ". Hasil: " + jumlahDitemukan
+        );
     }
 
     // Fitur penghapusan
@@ -777,3 +815,4 @@ public class PutusanManager {
         input.close();
     }
 }
+
