@@ -599,6 +599,123 @@ public class PutusanManager {
         tambahPutusan(putusan);
     }
 
+
+    // Menu pengurutan vonis menggunakan Merge Sort
+    private void urutkanPutusan() {
+        if (dataPutusan.isEmpty()) {
+            System.out.println("Belum ada data putusan.");
+            return;
+        }
+
+        System.out.println("\n===== PENGURUTAN VONIS =====");
+        System.out.println("1. Ascending (terendah ke tertinggi)");
+        System.out.println("2. Descending (tertinggi ke terendah)");
+        System.out.print("Pilih urutan: ");
+
+        int pilihan = bacaAngka();
+
+        if (pilihan != 1 && pilihan != 2) {
+            System.out.println("Pilihan tidak tersedia.");
+            return;
+        }
+
+        List<Putusan> daftar = new ArrayList<>();
+
+        for (int i = 0; i < dataPutusan.size(); i++) {
+            daftar.add(dataPutusan.get(i));
+        }
+
+        mergeSortVonis(daftar, 0, daftar.size() - 1, pilihan == 1);
+
+        System.out.println("\n===== HASIL PENGURUTAN VONIS =====");
+
+        for (int i = 0; i < daftar.size(); i++) {
+            Putusan p = daftar.get(i);
+
+            System.out.println(
+                    (i + 1) + ". Case ID: " + p.getCaseId()
+                    + " | Vonis: " + p.getVonisBulan() + " bulan"
+                    + " | Nomor perkara: " + p.getNomorPerkara()
+            );
+        }
+
+        System.out.println("Total data diurutkan: " + daftar.size());
+        System.out.println(
+                "Invariant Linked List: " +
+                dataPutusan.validateInvariant()
+        );
+
+        audit.catatAktivitas(
+                "PENGURUTAN",
+                "Mengurutkan " + daftar.size() +
+                " data berdasarkan vonis secara " +
+                (pilihan == 1 ? "ascending" : "descending")
+        );
+    }
+
+    // Proses utama Merge Sort
+    private void mergeSortVonis(
+            List<Putusan> daftar,
+            int kiri,
+            int kanan,
+            boolean ascending
+    ) {
+        if (kiri >= kanan) {
+            return;
+        }
+
+        int tengah = kiri + (kanan - kiri) / 2;
+
+        mergeSortVonis(daftar, kiri, tengah, ascending);
+        mergeSortVonis(daftar, tengah + 1, kanan, ascending);
+
+        gabungkanVonis(daftar, kiri, tengah, kanan, ascending);
+    }
+
+    // Menggabungkan dua bagian yang sudah terurut
+    private void gabungkanVonis(
+            List<Putusan> daftar,
+            int kiri,
+            int tengah,
+            int kanan,
+            boolean ascending
+    ) {
+        List<Putusan> sementara = new ArrayList<>();
+
+        int i = kiri;
+        int j = tengah + 1;
+
+        while (i <= tengah && j <= kanan) {
+            int vonisKiri = daftar.get(i).getVonisBulan();
+            int vonisKanan = daftar.get(j).getVonisBulan();
+
+            boolean ambilKiri = ascending
+                    ? vonisKiri <= vonisKanan
+                    : vonisKiri >= vonisKanan;
+
+            if (ambilKiri) {
+                sementara.add(daftar.get(i));
+                i++;
+            } else {
+                sementara.add(daftar.get(j));
+                j++;
+            }
+        }
+
+        while (i <= tengah) {
+            sementara.add(daftar.get(i));
+            i++;
+        }
+
+        while (j <= kanan) {
+            sementara.add(daftar.get(j));
+            j++;
+        }
+
+        for (int k = 0; k < sementara.size(); k++) {
+            daftar.set(kiri + k, sementara.get(k));
+        }
+    }
     // Menu utama
     private void jalankan() {
         int pilihan;
@@ -617,6 +734,7 @@ public class PutusanManager {
             System.out.println("8. Riwayat aktivitas Audit");
             System.out.println("9. Keluar");
             System.out.println("10. Ekspor data dan laporan");
+            System.out.println("11. Pengurutan vonis");
             System.out.println("======================================");
             System.out.print("Pilih menu: ");
 
@@ -666,6 +784,13 @@ public class PutusanManager {
                     System.out.println("Terima kasih. Program selesai.");
                     break;
 
+                case 10:
+                    menuEkspor();
+                    break;
+
+                case 11:
+                    urutkanPutusan();
+                    break;
                 default:
                     System.out.println("Pilihan tidak tersedia.");
             }
