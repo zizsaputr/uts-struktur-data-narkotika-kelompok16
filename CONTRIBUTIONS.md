@@ -19,7 +19,6 @@
 **GitHub:** `faizulrahmats788-web`
 
 Kontribusi:
-- Mengembangkan fitur audit riwayat aktivitas.
 - Mengembangkan fitur tampil dan tambah data putusan.
 - Mengembangkan fitur impor data melalui CSV.
 - Mengimplementasikan struktur data sekunder.
@@ -33,6 +32,7 @@ Kontribusi:
 **GitHub:** `abdulazizsaputra40`
 
 Kontribusi:
+- Mengembangkan fitur audit riwayat aktivitas.
 - Membuat dokumentasi proyek.
 - Melakukan pengujian aplikasi.
 - Mengembangkan fitur filter data putusan.
