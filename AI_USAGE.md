@@ -16,9 +16,9 @@ AI digunakan sebagai alat bantu pembelajaran, pemahaman materi, pengembangan kod
 | 2 | 08-11-2026 | ChatGPT | Membantu penyusunan kode AuditHistory, AuditLog, dan AuditService | Kode diperiksa melalui IntelliJ IDEA |
 | 3 | 08-11-2026 | ChatGPT | Membantu pembuatan dan pengujian AuditTest | Pengujian berhasil dijalankan melalui IntelliJ IDEA |
 | 4 | 08-11-2026 | ChatGPT | Membantu memahami Git, branch, commit, push, dan pull request | Perintah dijalankan dan hasilnya diperiksa |
-|5 | 08-11-2026	| ChatGPT	Membantu penyusunan pengujian integrasi IntegrasiTest	Pengujian berhasil dijalankan menggunakan JDK 17
-6	| 08-11-2026	| ChatGPT	Membantu proses kompilasi seluruh file Java	Seluruh file Java berhasil dikompilasi tanpa error
-7	| 08-11-2026	| ChatGPT	Membantu pemeriksaan hasil pengujian struktur data, Queue, Audit, dan integrasi	Hasil pengujian diperiksa melalui output program     |         |         |                   |                      |
+|5 | 08-11-2026	| ChatGPT |	Membantu penyusunan pengujian integrasi IntegrasiTest	Pengujian berhasil dijalankan menggunakan JDK 17
+6	| 08-11-2026	| ChatGPT	| Membantu proses kompilasi seluruh file Java	Seluruh file Java berhasil dikompilasi tanpa error
+7	| 08-11-2026	| ChatGPT	| Membantu pemeriksaan hasil pengujian struktur data, Queue, Audit, dan integrasi	Hasil pengujian diperiksa melalui output program     |         |         |                   |                      |
 
 ## Tanggung Jawab Anggota
 Anggota kelompok bertanggung jawab memahami dan memeriksa kode serta dokumentasi sebelum digunakan dalam proyek.
