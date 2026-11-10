@@ -6,7 +6,7 @@
 
 **Repository:** https://github.com/zizsaputr/uts-struktur-data-narkotika-kelompok16
 
-Struktur Data yang Digunakan
+## Struktur Data yang Digunakan
 
 Program ini menggunakan dua struktur data utama dalam pengelolaan data:
 
