@@ -46,15 +46,24 @@ Kontribusi:
 ## Issues
 
 Pekerjaan proyek dibagi menjadi beberapa tugas, antara lain:
-- Dokumentasi proyek.
-- Pengujian aplikasi.
-- Fitur filter putusan.
-- Fitur ekspor data.
-- Fitur pengurutan vonis.
-- Fitur agregasi statistik.
-- Fitur pencarian putusan.
-- Fitur hapus putusan.
-- Implementasi struktur data dan pengelolaan dataset.
+Nama Issue
+Membuat Struktur Folder Proyek Java
+Pengumpulan dataset
+Pembuatan data provenance
+Implementasi struktur data utama
+Implementasi struktur data sekunder
+Fitur impor CSV
+Fitur tampil dan tambah putusan
+Fitur hapus putusan
+Fitur pencarian putusan
+Fitur agregasi statistik
+Fitur pengurutan vonis
+Fitur audit riwayat aktivitas
+Fitur ekspor data
+Fitur filter putusan
+Pengujian aplikasi
+Dokumentasi proyek
+Testing aplikasi dan validasi struktur data
 
 ## Pull Requests
 
